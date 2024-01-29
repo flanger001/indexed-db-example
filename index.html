@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title></title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="app.js" defer></script>
+</head>
+<body>
+    <header><h1>IndexedDB</h1></header>
+    <main>
+        <div>
+            <h2>People</h2>
+            <div id="people"></div>
+            <form id="addperson">
+                <div>
+                    <label for="person">Add person</label>
+                    <input type="text" required name="person" id="person">
+                </div>
+                <div>
+                    <input type="submit" value="Add person">
+                </div>
+                <div>
+                    <p><button id="clear-people-store">Clear people store</button></p>
+                </div>
+            </form>
+        </div>
+        <div>
+            <h2>Pictures</h2>
+            <div id="pictures"></div>
+            <form id="addpicture">
+                <div>
+                    <label for="picture">Add picture</label>
+                    <input type="file" required name="picture" id="picture" accept="image/png, image/jpeg">
+                </div>
+                <div>
+                    <input type="submit" value="Add picture">
+                </div>
+                <div>
+                    <p><button id="clear-picture-store">Clear picture store</button></p>
+                </div>
+
+            </form>
+        </div>
+        <div>
+            <p><button id="delete-database">Delete database</button> (requires page refresh)</p>
+        </div>
+    </main>
+    <footer></footer>
+</body>
+</html>

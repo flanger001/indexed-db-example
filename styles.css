@@ -1,0 +1,14 @@
+body {
+    background: #111;
+    color: #ddd;
+}
+label {
+    display: block;
+    margin-bottom: 10px
+}
+input {
+    margin-bottom: 10px
+}
+.button {
+    margin-left: 10px
+}
