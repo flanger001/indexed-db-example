@@ -11,6 +11,7 @@
     const DATABASE_PEOPLE_STORE_NAME = "people"
     const DATABASE_PICTURE_STORE_NAME = "pictures"
 
+    // Utilities
     function openDatabase() {
         console.log("Opening database")
         const request = window.indexedDB.open(DATABASE_NAME, DATABASE_VERSION)
@@ -21,17 +22,17 @@
         request.onsuccess = (event) => {
             console.log("Database successfully opened")
             database = event.target.result
-            listPeopleData()
-            listPictureData()
+            listData(DATABASE_PEOPLE_STORE_NAME, appendPersonToList)
+            listData(DATABASE_PICTURE_STORE_NAME, appendPictureToList)
         }
         request.onupgradeneeded = (event) => {
             console.log("Database version upgrade required")
             database = event.target.result;
             console.log("Creating object stores")
-            database.createObjectStore(DATABASE_PEOPLE_STORE_NAME, { autoIncrement: true })
-            console.log(`Created ${DATABASE_PEOPLE_STORE_NAME} store`)
-            database.createObjectStore(DATABASE_PICTURE_STORE_NAME, { autoIncrement: true })
-            console.log(`Created ${DATABASE_PICTURE_STORE_NAME} store`)
+            ;[DATABASE_PEOPLE_STORE_NAME, DATABASE_PICTURE_STORE_NAME].forEach((store) => {
+                database.createObjectStore(store, { autoIncrement: true })
+                console.log(`Created ${store} store`)
+            })
         }
     }
 
@@ -64,7 +65,7 @@
         }
     }
 
-    function createEventListeners() {
+    function createGlobalEventListeners() {
         const personForm = document.forms.addperson
         const personInput = personForm.person
         personForm.addEventListener("submit", (event) => {
@@ -87,7 +88,7 @@
         deleteDatabaseButton.addEventListener("click", (event) => {
             event.preventDefault()
             event.stopPropagation()
-            deleteDatabase("people")
+            deleteDatabase()
             document.getElementById(DATABASE_PEOPLE_STORE_NAME).innerHTML = ""
             document.getElementById(DATABASE_PICTURE_STORE_NAME).innerHTML = ""
         })
@@ -98,7 +99,7 @@
             event.stopPropagation()
             clearStore(DATABASE_PEOPLE_STORE_NAME)
             document.getElementById(DATABASE_PEOPLE_STORE_NAME).innerHTML = ""
-            listPeopleData()
+            listData(DATABASE_PEOPLE_STORE_NAME, appendPersonToList)
         })
 
         const clearPictureStoreButton = document.getElementById("clear-picture-store")
@@ -107,26 +108,26 @@
             event.stopPropagation()
             clearStore(DATABASE_PICTURE_STORE_NAME)
             document.getElementById(DATABASE_PICTURE_STORE_NAME).innerHTML = ""
-            listPictureData()
+            listData(DATABASE_PICTURE_STORE_NAME, appendPictureToList)
         })
     }
-    // People
-    function listPeopleData() {
-        const transaction = database.transaction([DATABASE_PEOPLE_STORE_NAME])
-        const objectStore = transaction.objectStore(DATABASE_PEOPLE_STORE_NAME)
+
+    function listData(storeName, appendCb) {
+        const transaction = database.transaction([storeName])
+        const objectStore = transaction.objectStore(storeName)
         const request = objectStore.openCursor()
         request.onsuccess = (event) => {
-            const targetElement = document.getElementById(DATABASE_PEOPLE_STORE_NAME)
+            const targetElement = document.getElementById(storeName)
             const cursor = event.target.result
 
             if (cursor) {
-                const person = cursor.value
-                appendPersonToList(person, cursor.key, targetElement)
+                appendCb(cursor, targetElement)
                 cursor.continue()
             }
         }
     }
 
+    // People
     function deletePersonFromDatabase(id) {
         const transaction = database.transaction([DATABASE_PEOPLE_STORE_NAME], "readwrite")
         const objectStore = transaction.objectStore(DATABASE_PEOPLE_STORE_NAME)
@@ -149,15 +150,16 @@
         request.onsuccess = (event) => {
             const targetElement = document.getElementById(DATABASE_PEOPLE_STORE_NAME)
             const id = event.target.result
-            appendPersonToList(person, id, targetElement)
+            appendPersonToList({ key: id, value: person, }, targetElement)
             console.log("Added name to database")
         }
         request.onerror = () => console.log("Unable to add name to database")
     }
 
-    function appendPersonToList(person, id, targetElement) {
+    function appendPersonToList(cursor, targetElement) {
+        const { key: id } = cursor
         const element = document.createElement("p")
-        element.innerText = person.name
+        element.innerText = cursor.value.name
 
         const deleteButton = document.createElement("button")
         deleteButton.innerText = "Delete"
@@ -174,22 +176,6 @@
     }
 
     // Pictures
-    function listPictureData() {
-        const transaction = database.transaction([DATABASE_PICTURE_STORE_NAME])
-        const objectStore = transaction.objectStore(DATABASE_PICTURE_STORE_NAME)
-        const request = objectStore.openCursor()
-        request.onsuccess = (event) => {
-            const targetElement = document.getElementById(DATABASE_PICTURE_STORE_NAME)
-            const cursor = event.target.result
-
-            if (cursor) {
-                const person = cursor.value
-                appendPictureToList(person, cursor.key, targetElement)
-                cursor.continue()
-            }
-        }
-    }
-
     function deletePictureFromDatabase(id) {
         const transaction = database.transaction([DATABASE_PICTURE_STORE_NAME], "readwrite")
         const objectStore = transaction.objectStore(DATABASE_PICTURE_STORE_NAME)
@@ -211,16 +197,17 @@
         request.onsuccess = (event) => {
             const targetElement = document.getElementById(DATABASE_PICTURE_STORE_NAME)
             const id = event.target.result
-            appendPictureToList(picture, id, targetElement)
+            appendPictureToList({ key: id, value: picture, }, targetElement)
             console.log("Added picture to database")
         }
         request.onerror = () => console.log("Unable to add picture to database")
     }
 
-    function appendPictureToList(picture, id, targetElement) {
+    function appendPictureToList(cursor, targetElement) {
+        const { key: id } = cursor
         const element = document.createElement("div")
         const image = document.createElement("img")
-        image.src = URL.createObjectURL(picture)
+        image.src = URL.createObjectURL(cursor.value)
         image.width = 300
         element.appendChild(image)
 
@@ -239,5 +226,5 @@
     }
 
     openDatabase()
-    createEventListeners()
+    createGlobalEventListeners()
 })()
